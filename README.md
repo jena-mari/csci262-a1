@@ -45,8 +45,8 @@ Options: (C)reate, (A)ppend, (R)ead, (W)rite, (L)ist, (S)ave or (E)xit.
 ## Reduction Implementation Notes
 - User Authentication is based on the traditional salt/shadow model.
 - Users are created using a salt/hash/shadow system:
-    - `salt.txt` stores the username and randomised 8-digit salt.
-    - `shadow.txt` stores the username, hashed password+salt, and security clearance.
+    - `salt.txt` stores the username and randomised 8-digit salt
+    - `shadow.txt` stores the username, hashed password+salt, and security clearance
 - Passwords must meet minimum strength requirements (length, uppercase, lowercase, digit, special character).
 - Authentication is done by recomputing the salted hash and comparing it against shadow.txt.
 - The internal file system allows creating, reading, writing, appending, listing, and saving files.
@@ -65,9 +65,7 @@ Options: (C)reate, (A)ppend, (R)ead, (W)rite, (L)ist, (S)ave or (E)xit.
 - The program does not rely on any external libraries other than the Python standard library.
 
 ## Demonstration
-<img width="539" height="130" alt="1" src="https://github.com/user-attachments/assets/11ee4209-113e-40f8-a402-c84b225d74e2" />
-<img width="563" height="417" alt="2" src="https://github.com/user-attachments/assets/1ef40111-69e8-41bb-aae8-a222e4ff0f73" />
-<img width="563" height="251" alt="3" src="https://github.com/user-attachments/assets/75b21124-ceaf-4730-ab13-4459794a5c05" />
+<img width="1511" height="772" alt="Screenshot 2025-09-06 at 4 37 40 pm" src="https://github.com/user-attachments/assets/55b04ef9-ea97-40f6-81c5-26416514ceaf" />
 
 
 
