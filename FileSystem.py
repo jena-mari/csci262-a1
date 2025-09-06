@@ -4,266 +4,285 @@ Part Two: Authentication and Access Control System
 1. Construct a hash/salt/shadow based user/password creation system
 2. Construct a hash/salt/shadow based user authentication system.
 3. Construct an associated file system, into which a user can log. Files can be created, read from,
-written to, but only in accordance with a four–level access control model.
-4. The levels of the four–level access control model are 0, 1, 2 and 3. 0 is dominated by 1, 2 and 3; and
-1 and 2 are dominated by 3; and 1 is dominated by 2.
-
+   written to, but only in accordance with a four–level access control model.
+4. The levels of the four–level access control model are 0, 1, 2 and 3. 0 is dominated by 1, 2 and 3; 
+   and 1 and 2 are dominated by 3; and 1 is dominated by 2.
 """
+# ---- IMPORT ----
 
-# ---- INITIAL REQUIREMENTS ----
-
-# import all needed modules
 import os
 import hashlib
-import json
 import random
 import re
 import sys
 
-# state blank files
-salt_file = "salt.txt" # for initialisation
-shadow_file = "shadow.txt" # for initialisation
-files_store = "Files.store" # for logging in
+# ---- FILES ----
+salt_file = "salt.txt"
+shadow_file = "shadow.txt"
+files_store = "Files.store"
+
+# ---- HELPER FUNCTIONS ----
 
 def md5_hash(text):
-    # call MD5 with text for reporting test output
     return hashlib.md5(text.encode()).hexdigest()
 
-# report test output of the MD5
-def report_output():
+def report_md5_test():
+    # return this for every test
     print(f'MD5 ("This is a test") = {md5_hash("This is a test")}')
 
-
-# ---- INITIALISATION FUNCTION ----
+# ---- INITIALISATION ----
 def initialisation():
+    report_md5_test()
 
-    # report output
-    report_output()
+    # create blank files if missing
+    for f in [salt_file, shadow_file]:
+        if not os.path.exists(f):
+            open(f, "w").close()
 
-    # prompt for a username
-    username = input("Username: ").strip()
-    # check if this username exists in the salt.txt file
-    if os.path.exists(salt_file):
-        with open(salt_file) as a: # open salt file as "a" (placeholder name)
-            for line in a:
-                if line.startswith(username + ":"): # follows the format of usernames in salt.txt file
-                    print("User already exists.") # say if user exists
-                    return
+    while True:
+        username = input("Username (or 'exit' to cancel): ").strip()
+        if username.lower() == "exit":
+            print("Cancelled.")
+            return
 
-    # prompt for a password and confirm
-    password = input("Password: ")
-    confirm_password = input("Confirm Password: ")
+        exists = False
+        with open(salt_file, "r") as sf:
+            for line in sf:
+                if line.startswith(username + ":"):
+                    exists = True
+                    break
+        if exists:
+            print("User already exists. Try again.")
+            continue
+        break
 
-    if password != confirm_password: # if both passwords don't match
-        print("Passwords do not match. Please try again.")
-        return
-    
-    # add appropriate checks for a strong password and stronger entropy
-    if len(password) < 8:
-        print("Password must be at least 8 characters long. Please try again.")
-        return
-    if not re.search(r"[A-Z]", password):
-        print("Password must contain at least one uppercase letter (A–Z). Please try again.")
-        return
-    if not re.search(r"[a-z]", password):
-        print("Password must contain at least one lowercase letter (a–z). Please try again.")
-        return
-    if not re.search(r"[0-9]", password):
-        print("Password must contain at least one digit (0–9). Please try again.")
-        return
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-        print("Password must contain at least one special character (!@#$%^&* etc.). Please try again.")
-        return
-    
-    # clearance input (final request of the user)
-    try:
-        security_clearance = int(input("User clearance (0 or 1 or 2 or 3): "))
-    except ValueError:
-        print("Invalid input. User clearance must be a number.") # if input was not a number
-        return
-    if security_clearance not in [0, 1, 2, 3]:
-        print("Invalid input. Please choose only from numbers 0-3.") # if input was not among the list
-        return
+    # create a password for entered username
+    while True:
+        password = input("Password: ")
+        confirm = input("Confirm Password: ")
+        if password != confirm:
+            # confirm if passwords match
+            print("Passwords do not match, try again.")
+            continue
+        # create password checks to meet standard requirements
+        if len(password) < 6 or not re.search(r"[A-Za-z]", password) or not re.search(r"[0-9]", password):
+            print("Password must be at least 6 characters and contain at least one letter and one number.")
+            continue
+        break
 
-    # if all of this passes, we can proceed to modifying salt.txt and shadow.txt to include the user
+    # clearance
+    while True:
+        try:
+            clearance = int(input("User clearance (0 or 1 or 2 or 3): "))
+            if clearance not in [0,1,2,3]:
+                print("Invalid clearance.")
+                continue
+            break
+        except ValueError:
+            print("Enter a number 0-3.")
 
-    # create salt = randomly chosen string of 8 digits
+    # generate salt and hash
     salt = str(random.randint(10000000, 99999999))
-    # create salted hash using md5
-    pass_salt_hash = md5_hash(password + salt)
+    pass_hash = md5_hash(password + salt)
 
-    # append to salt.txt and shadow.txt
+    # add example lines if missing
+    with open(salt_file, "r") as sf:
+        lines = sf.read().splitlines()
+    if "Username:Salt" not in lines:
+        with open(salt_file, "a") as sf:
+            sf.write("Username:Salt\n")
+    with open(shadow_file, "r") as sh:
+        lines = sh.read().splitlines()
+    if "Username:PassSaltHash:SecurityClearance" not in lines:
+        with open(shadow_file, "a") as sh:
+            sh.write("Username:PassSaltHash:SecurityClearance\n")
+
+    # append added username and necessary details
     with open(salt_file, "a") as sf:
         sf.write(f"{username}:{salt}\n")
     with open(shadow_file, "a") as sh:
-        sh.write(f"{username}:{pass_salt_hash}:{security_clearance}\n")
+        sh.write(f"{username}:{pass_hash}:{clearance}\n")
 
-    print(f"User {username} created successfully.")
+    # inform user that their username has been created
+    print(f"User {username} created successfully!")
 
-
-# ---- LOGGING IN ----
+# ---- LOGIN ----
 def logging_in():
-    
-    # report output
-    report_output()
+    # report the test
+    report_md5_test()
 
-    # load salts and shadows into memory
+    # initial requirements
     salts = {}
     shadows = {}
 
-    # locate salt and user in salt_file
+    # load salts
     if os.path.exists(salt_file):
         with open(salt_file, "r") as sf:
             for line in sf:
-                if ":" in line:
-                    user, s = line.strip().split(":")
+                line = line.strip()
+                if not line or line.startswith("Username:"):
+                    continue  # skip blank lines or header
+                try:
+                    user, s = line.split(":")
                     salts[user] = s
+                # in case of malformed lines
+                except ValueError:
+                    print(f"Skipping malformed line in {salt_file}: {line}")
+
+    # load shadows
     if os.path.exists(shadow_file):
         with open(shadow_file, "r") as sh:
             for line in sh:
-                if ":" in line:
-                    user, pass_salt_hash, security_clearance = line.strip().split(":")
-                    shadows[user] = (pass_salt_hash, security_clearance)
+                line = line.strip()
+                if not line or line.startswith("Username:"):
+                    continue  # skip blank lines or header
+                try:
+                    user, h, c = line.split(":")
+                    shadows[user] = (h, int(c))
+                # in case of malformed lines
+                except ValueError:
+                    print(f"Skipping malformed line in {shadow_file}: {line}")
 
-    # prompt for a username
+    # enter username
     username = input("Username: ").strip()
-    # check if the username exists
     if username not in salts:
-        print("This user does not exist.") # if user does not exist
+        print("User not found.")
         return None
-        
-    # prompt for a password
-    password = input("Password: ")
 
-    # retrieve salt and hash
+    # verify password
+    password = input("Password: ")
     salt = salts[username]
+    hash_attempt = md5_hash(password + salt)
+
+    # print all necessary information
     print(f"{username} found in salt.txt")
     print(f"salt retrieved: {salt}")
     print("hashing ...")
-    pass_salt_hash = md5_hash(password + salt)
-    print(f"hash value: {pass_salt_hash}")
+    print(f"hash value: {hash_attempt}")
 
-    # check if hash matches shadow
-    if username in shadows and pass_salt_hash == shadows[username][0]:
-        security_clearance = shadows[username][1] # obtain security clearance
-        print(f"Authentication for {username} complete.") # report authentication 
-        print(f"The clearance for {username} is {security_clearance}.") # report clearance
-        return username, security_clearance
+    if hash_attempt == shadows[username][0]:
+        print(f"Authentication for {username} complete.")
+        print(f"The clearance for {username} is {shadows[username][1]}.")
+        return username, shadows[username][1]
     else:
         print("Incorrect password.")
         return None
-    
-# ---- ONCE LOGGED IN ----
 
-def main_menu(user, security_clearance):
 
-    # load files into memory
+# ---- BELL-LAPADULA ----
+def can_read(user_level, file_level):
+    return user_level >= file_level # no read up
+
+def can_write(user_level, file_level):
+    return user_level <= file_level # no write down
+
+# ---- FILESYSTEM MENU ----
+def main_menu(user, clearance):
     files = {}
 
-    # open files_store
+    # load Files.store if exists
     if os.path.exists(files_store):
-        with open(files_store) as fs:
+        with open(files_store,"r") as fs:
             current_file = None
             for line in fs:
                 line = line.strip()
-                if not line:
-                    continue
-                if line.startswith("---"):
+                if not line: continue
+                if line.startswith("---"): 
                     current_file = None
                     continue
                 if "(" in line and "Owner:" in line and "Level:" in line:
-                    # Parse filename, owner, level
                     parts = line.split("(")
                     fname = parts[0].strip()
                     details = parts[1].rstrip(")")
                     owner = details.split(",")[0].split(":")[1].strip()
                     level = int(details.split(",")[1].split(":")[1].strip())
-                    files[fname] = {"owner": owner, "level": level, "content": ""}
+                    files[fname] = {"owner": owner,"level":level,"content":""}
                     current_file = fname
                 elif line.startswith("Content:") and current_file:
-                    files[current_file]["content"] = line.replace("Content:", "", 1).strip()
+                    files[current_file]["content"] = line.replace("Content:","",1).strip()
 
-    # create a while loop for the main menu
+    # use while loop to print out options
     while True:
-        # create a list of options
-        print("Options: (C)reate, (A)ppend, (R)ead, (W)rite, (L)ist, (S)ave or (E)xit.\n ")
-        # ask for user's choice 
-        choice = input("Choose one of the options: ").strip().upper()
+        print("\nOptions: (C)reate, (A)ppend, (R)ead, (W)rite, (L)ist, (S)ave, (E)xit")
+        choice = input("Pick an option: ").strip().upper()
 
-        # if choice is (c)reate
+        # creating a file
         if choice == "C":
-            filename = input("Filename: ").strip()
-            if filename in files:
+            fname = input("Filename: ").strip()
+            if fname in files:
                 print("File already exists.")
             else:
-                files[filename] = {
-                    "owner": user,
-                    "level": int(security_clearance),
-                    "content": ""
-                }
-                print(f"File {filename} created.")
+                files[fname] = {"owner": user, "level": clearance, "content": ""}
+                print(f"{fname} created!")
 
+        # appending to existing file
         elif choice == "A":
-            filename = input("Filename: ").strip()
-            if filename not in files:
-                print("File does not exist.")
+            fname = input("Filename: ").strip()
+            if fname not in files:
+                print("File doesn't exist.")
+            elif can_write(clearance, files[fname]["level"]):
+                data = input("Text to append: ")
+                files[fname]["content"] += data
+                print("Appended!")
             else:
-                if int(security_clearance) <= files[filename]["level"]:
-                    data = input("Enter text to append: ")
-                    files[filename]["content"] += data
-                    print("Data appended.")
-                else:
-                    print("Access denied: insufficient clearance to append.")
+                print("Access denied (can't write down).")
 
+        # reading an existing file and its content
         elif choice == "R":
-            filename = input("Filename: ").strip()
-            if filename not in files:
-                print("File does not exist.") 
+            fname = input("Filename: ").strip()
+            if fname not in files:
+                print("File doesn't exist.")
+            elif can_read(clearance, files[fname]["level"]):
+                print(f"Contents of {fname}:\n{files[fname]['content']}")
             else:
-                if int(security_clearance) >= files[filename]["level"]:
-                    print(f"Contents of {filename}: {files[filename]['content']}")
-                else:
-                    print("Access denied: insufficient clearance to read.")
+                print("Access denied (can't read up).")
 
+        # writing to an existing file
         elif choice == "W":
-            filename = input("Filename: ").strip()
-            if filename not in files:
-                print("File does not exist.") 
+            fname = input("Filename: ").strip()
+            if fname not in files:
+                print("File doesn't exist.")
+            elif can_write(clearance, files[fname]["level"]):
+                data = input("New content: ")
+                files[fname]["content"] = data
+                print("File overwritten!")
             else:
-                if int(security_clearance) <= files[filename]["level"]:
-                    data = input("Enter new content: ")
-                    files[filename]["content"] = data
-                    print("File overwritten.")
-                else:
-                    print("Access denied: insufficient clearance to write.")
+                print("Access denied (can't write down).")
 
+        # listing existing files and their content
         elif choice == "L":
             if files:
                 for fname, info in files.items():
                     print(f"{fname} (Owner: {info['owner']}, Level: {info['level']})")
             else:
-                print("No files created yet.")
+                print("No files yet.")
 
+        # saving files
         elif choice == "S":
-            with open(files_store, "w") as fs:
+            with open(files_store,"w") as fs:
                 for fname, info in files.items():
                     fs.write(f"{fname} (Owner: {info['owner']}, Level: {info['level']})\n")
                     fs.write(f"Content: {info['content']}\n")
                     fs.write("---\n")
-            print("Files saved.")
+            print("Files saved!")
 
+        # exiting the file system
         elif choice == "E":
             confirm = input("Shut down the FileSystem? (Y)es or (N)o: ").strip().upper()
             if confirm == "Y":
+                print("Goodbye!")
                 break
-        else:
-            print("Invalid choice. Please select a valid option.")
 
-# ---- MAIN FUNCTION ----
+        else:
+            print("Invalid option, try again.")
+
+# ---- MAIN ----
 if __name__ == "__main__":
+    # use initialisation if user states -i
     if len(sys.argv) > 1 and sys.argv[1] == "-i":
         initialisation()
     else:
+        # otherwise, do a regular log in
         creds = logging_in()
         if creds:
             main_menu(*creds)
