@@ -8,7 +8,7 @@
 
 This program is written in Python 3.
 
-1. To initialise the FileSystem and create a new user:
+1. To initialise the FileSystem and run the hash/salt/shadow based user/password creation system:
 ```bash
 $ python3 FileSystem.py -i
 ```
@@ -27,7 +27,7 @@ This will create, or append to:
 - salt.txt
 - shadow.txt
 
-2. To run the FileSystem normally, and be able to do login and file operations:
+2. To run the FileSystem normally with no arguments, and allow a user to try and log into the file system:
 ```python
 $ python3 FileSystem.py
 ```
@@ -42,19 +42,19 @@ Authentication for Bob complete.
 The clearance for Bob is 1.
 Options: (C)reate, (A)ppend, (R)ead, (W)rite, (L)ist, (S)ave or (E)xit.
 ```
-## Reduction  Implementation Notes
+## Reduction Implementation Notes
 - User Authentication is based on the traditional salt/shadow model.
 - Users are created using a salt/hash/shadow system:
-    - `salt.txt` stores the username and randomised 8-digit salt
-    - `shadow.txt` stores the username, hashed password+salt, and security clearance
+    - `salt.txt` stores the username and randomised 8-digit salt.
+    - `shadow.txt` stores the username, hashed password+salt, and security clearance.
 - Passwords must meet minimum strength requirements (length, uppercase, lowercase, digit, special character).
 - Authentication is done by recomputing the salted hash and comparing it against shadow.txt.
 - The internal file system allows creating, reading, writing, appending, listing, and saving files.
 - Access is controlled according to the Bell–LaPadula model:
-    - Users can only read files at or below their clearance
-    - Users can only write/append files at or above their clearance
+    - Users can only read files at or below their clearance.
+    - Users can only write/append files at or above their clearance.
 - Files are stored in memory and saved to Files.store for persistence.
-- The program always reports a test MD5 hash: MD5("This is a test") at startup.
+- The program always reports a test MD5 hash: MD5("This is a test") at the start.
 
 ## CAPA Compatibility
 - The program has been tested with Python 3 on CAPA.
