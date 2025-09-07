@@ -125,7 +125,6 @@ def logging_in():
                 try:
                     user, s = line.split(":")
                     salts[user] = s
-                # in case of malformed lines
                 except ValueError:
                     print(f"Skipping malformed line in {salt_file}: {line}")
 
@@ -139,20 +138,28 @@ def logging_in():
                 try:
                     user, h, c = line.split(":")
                     shadows[user] = (h, int(c))
-                # in case of malformed lines
                 except ValueError:
                     print(f"Skipping malformed line in {shadow_file}: {line}")
 
     # enter username
     username = input("Username: ").strip()
     if username not in salts:
-        print("User not found.")
+        print("Authentication failed.")
         return None
 
     # verify password
     password = input("Password: ")
     salt = salts[username]
     hash_attempt = md5_hash(password + salt)
+
+    if hash_attempt == shadows[username][0]:
+        print(f"Authentication for {username} complete.")
+        print(f"The clearance for {username} is {shadows[username][1]}.")
+        return username, shadows[username][1]
+    else:
+        print("Authentication failed.")
+        return None
+
 
     # print all necessary information
     print(f"{username} found in salt.txt")
