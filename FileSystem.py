@@ -153,6 +153,11 @@ def logging_in():
     hash_attempt = md5_hash(password + salt)
 
     if hash_attempt == shadows[username][0]:
+        # only reveal details if authentication succeeds
+        print(f"{username} found in salt.txt")
+        print(f"salt retrieved: {salt}")
+        print("hashing ...")
+        print(f"hash value: {hash_attempt}")
         print(f"Authentication for {username} complete.")
         print(f"The clearance for {username} is {shadows[username][1]}.")
         return username, shadows[username][1]
@@ -160,20 +165,6 @@ def logging_in():
         print("Authentication failed.")
         return None
 
-
-    # print all necessary information
-    print(f"{username} found in salt.txt")
-    print(f"salt retrieved: {salt}")
-    print("hashing ...")
-    print(f"hash value: {hash_attempt}")
-
-    if hash_attempt == shadows[username][0]:
-        print(f"Authentication for {username} complete.")
-        print(f"The clearance for {username} is {shadows[username][1]}.")
-        return username, shadows[username][1]
-    else:
-        print("Incorrect password.")
-        return None
 
 
 # ---- ACCESS CONTROL (Bell-LaPadula) ----
