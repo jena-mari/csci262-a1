@@ -169,12 +169,25 @@ def logging_in():
         return None
 
 
-# ---- BELL-LAPADULA ----
+# ---- ACCESS CONTROL (Bell-LaPadula) ----
+# dominance rules:
+# 0 < 1 < 2 < 3
+
+dominance = {
+    0: [1, 2, 3],
+    1: [2, 3],
+    2: [3],
+    3: []
+}
+
 def can_read(user_level, file_level):
-    return user_level >= file_level # no read up
+    # no read up: user can read if the file is at or below their clearance
+    return file_level == user_level or file_level in dominance.get(user_level, [])
 
 def can_write(user_level, file_level):
-    return user_level <= file_level # no write down
+    # no write down: user can write if their clearance is at or below the file’s level
+    return user_level == file_level or user_level in dominance.get(file_level, [])
+
 
 # ---- FILESYSTEM MENU ----
 def main_menu(user, clearance):
@@ -215,39 +228,46 @@ def main_menu(user, clearance):
                 files[fname] = {"owner": user, "level": clearance, "content": ""}
                 print(f"{fname} created!")
 
-        # appending to existing file
+        # appending to an existing file
         elif choice == "A":
             fname = input("Filename: ").strip()
             if fname not in files:
                 print("File doesn't exist.")
-            elif can_write(clearance, files[fname]["level"]):
-                data = input("Text to append: ")
-                files[fname]["content"] += data
-                print("Appended!")
             else:
-                print("Access denied (can't write down).")
+                if can_write(clearance, files[fname]["level"]):
+                    print("Access granted (append).")
+                    data = input("Text to append: ")
+                    files[fname]["content"] += data
+                    print("Appended!")
+                else:
+                    print("Access denied (can't write down).")
 
-        # reading an existing file and its content
+        # reading an existing file
         elif choice == "R":
             fname = input("Filename: ").strip()
             if fname not in files:
                 print("File doesn't exist.")
-            elif can_read(clearance, files[fname]["level"]):
-                print(f"Contents of {fname}:\n{files[fname]['content']}")
             else:
-                print("Access denied (can't read up).")
+                if can_read(clearance, files[fname]["level"]):
+                    print("Access granted (read).")
+                    print(f"Contents of {fname}:\n{files[fname]['content']}")
+                else:
+                    print("Access denied (can't read up).")
 
-        # writing to an existing file
+        # writing to an existing file (overwrite)
         elif choice == "W":
             fname = input("Filename: ").strip()
             if fname not in files:
                 print("File doesn't exist.")
-            elif can_write(clearance, files[fname]["level"]):
-                data = input("New content: ")
-                files[fname]["content"] = data
-                print("File overwritten!")
             else:
-                print("Access denied (can't write down).")
+                if can_write(clearance, files[fname]["level"]):
+                    print("Access granted (write).")
+                    data = input("New content: ")
+                    files[fname]["content"] = data
+                    print("File overwritten!")
+                else:
+                    print("Access denied (can't write down).")
+
 
         # listing existing files and their content
         elif choice == "L":
@@ -286,3 +306,4 @@ if __name__ == "__main__":
         creds = logging_in()
         if creds:
             main_menu(*creds)
+
