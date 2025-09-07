@@ -73,4 +73,7 @@ After this step, the user will be able to do any of the mentioned options.
   - shadow.txt (initially empty)
 - The program does not rely on any external libraries other than the Python standard library.
 
-View GitHub here: https://github.com/jena-mari/csci262-a1
+## Example of Program
+This example also includes certain instances where authentication fails.
+<img width="1512" height="982" alt="Screenshot 2025-09-07 at 9 20 49 pm" src="https://github.com/user-attachments/assets/ab93fe2a-3429-4af1-8e9c-4bd87f9c3b0a" />
+
