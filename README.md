@@ -61,6 +61,7 @@ After this step, the user will be able to do any of the mentioned options.
 - Access is controlled according to the Bell–LaPadula model:
     - Users can only read files at or below their clearance.
     - Users can only write/append files at or above their clearance.
+    - Dominance Rules state that user clearance dominance is 0 < 1 < 2 < 3.
 - Files are stored in memory and saved to Files.store for persistence.
 - The program always reports a test MD5 hash: MD5("This is a test") at the start.
 
@@ -72,5 +73,4 @@ After this step, the user will be able to do any of the mentioned options.
   - shadow.txt (initially empty)
 - The program does not rely on any external libraries other than the Python standard library.
 
-## Example of the Program
-<img width="894" height="799" alt="Screenshot 2025-09-06 at 5 18 51 pm" src="https://github.com/user-attachments/assets/486d6c42-8cb7-40dc-8e43-ae5408ad1065" />
+View GitHub here: https://github.com/jena-mari/csci262-a1
